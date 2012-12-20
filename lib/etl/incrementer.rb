@@ -1,6 +1,6 @@
 require 'date'
 require 'time'
-require './lib/etl/basic'
+require 'etl/basic'
 
 # Incrementer ETL starts at the specified start and increments over the range
 # by the specified step up until the stop.

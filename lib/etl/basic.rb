@@ -5,7 +5,7 @@
 # Many ETLs can subclass this and add attributes and / or override #etl to be
 # more sophisticated.
 
-require './lib/etl/helpers'
+require 'etl/helpers'
 
 module ETL
   class Basic

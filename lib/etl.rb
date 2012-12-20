@@ -3,5 +3,5 @@ require "etl/version"
 module Etl
 end
 
-require "./lib/etl/basic"
-require "./lib/etl/incrementer"
+require "etl/basic"
+require "etl/incrementer"
