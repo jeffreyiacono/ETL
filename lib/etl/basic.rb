@@ -1,9 +1,7 @@
 # Basic ETL is, well, basic. (Who would have guessed it?)
 #
-# Parameters include a database connection, logger, description.
-#
-# Many ETLs can subclass this and add attributes and / or override #etl to be
-# more sophisticated.
+# Inherit from this class and add attributes and / or override #etl to add
+# more sophistication.
 
 require 'etl/helpers'
 
