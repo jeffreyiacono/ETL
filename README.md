@@ -26,7 +26,7 @@ Both ETLs depend on having a database connection that __must__ respond to
 `#query`. The [mysql2](https://github.com/brianmario/mysql2) is a good option.
 
 You can optionally supply a logger that __must__ respond to `#warn` and `#log`.
-Implementation of your logger of choice is left up to the developer. See the
+Implementation of your logger of choice is left up to the developer. View the
 [logger details](#logger-details) to see what is logged and when.
 
 ### ETL::Basic
