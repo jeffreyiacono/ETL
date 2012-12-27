@@ -20,7 +20,12 @@ module ETL
     #     if block
     #       @_[method]_block = block
     #     else
-    #       @[method] ||= @_[method]_block.call self, *args
+    #       # cache block's result
+    #       if defined? @[method]
+    #         @[method]
+    #       else
+    #         @[method] = @_[method]_block.call(self, *args)
+    #       end
     #     end
     #   end
     #
@@ -33,11 +38,13 @@ module ETL
         if block
           instance_variable_set("@_#{method}_block", block)
         else
-          val = instance_variable_get("@#{method}")
-          return val if val
-          instance_variable_set("@#{method}",
-                                instance_variable_get("@_#{method}_block")
-                                  .call(self, *args))
+          if instance_variable_defined?("@#{method}")
+            instance_variable_get("@#{method}")
+          else
+            instance_variable_set("@#{method}",
+                                  instance_variable_get("@_#{method}_block")
+                                    .call(self, *args))
+          end
         end
       end
     end
