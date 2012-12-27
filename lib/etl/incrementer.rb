@@ -55,15 +55,14 @@ module ETL
 
     # NOTE: If you needed to handle more type data type casting you can add a
     # case statement. If you need to be able to handle entirely different sets
-    # of casting depending on database engine, you can modify cast to take a
+    # of casting depending on database engine, you can modify #cast to take a
     # "type" arg and then determine which caster to route the arg through
     def cast arg
       case arg
-      when String, Integer then arg
-      when Date            then arg.strftime("%Y-%m-%d")
-      when Time            then arg.strftime("%Y-%m-%d %H:%M:%S")
+      when Date then arg.strftime("%Y-%m-%d")
+      when Time then arg.strftime("%Y-%m-%d %H:%M:%S")
       else
-        raise RuntimeError, "unsure how to cast #{arg}"
+        arg
       end
     end
   end
