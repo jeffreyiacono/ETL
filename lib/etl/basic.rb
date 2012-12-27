@@ -58,8 +58,10 @@ module ETL
       end
     end
 
-    def run
-      ORDERED_ETL_OPERATIONS.each { |method| send method }
+    def run options = {}
+      (ORDERED_ETL_OPERATIONS - [*options[:except]]).each do |method|
+        send method
+      end
     end
 
     def logger= logger

@@ -165,4 +165,15 @@ describe ETL::Basic do
       ]
     end
   end
+
+  describe '#run operations specified for exclusion' do
+    let(:connection) { stub }
+    let(:etl)        { ETL::Basic.new connection: connection }
+
+    it "does not call the specified method" do
+      etl.ensure_destination {}
+      etl.should_not_receive(:ensure_destination)
+      etl.run except: :ensure_destination
+    end
+  end
 end
