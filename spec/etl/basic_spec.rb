@@ -20,21 +20,29 @@ describe ETL::Basic do
           name VARCHAR(10),
           amount INT(11) DEFAULT 0,
           the_date DATE DEFAULT NULL,
+          the_null_date DATE DEFAULT NULL,
           the_time_at DATETIME DEFAULT NULL,
+          the_null_time_at DATETIME DEFAULT NULL,
           PRIMARY KEY (id)
         )
       ]
 
       client.query %[
-        INSERT INTO etl_source (name, amount, the_date, the_time_at)
-        VALUES
-          ('Jeff', 100, '2012-01-02', '2012-01-02 00:00:01'),
-          ('Ryan', 50, '2012-01-01', '2012-01-01 00:00:00'),
-          ('Jack', 75, '2012-01-01', '2012-01-01 00:00:00'),
-          ('Jeff', 10, '2012-01-01', '2012-01-01 00:00:00'),
-          ('Jack', 45, '2012-01-01', '2012-01-01 00:00:00'),
-          ('Nick', -90, '2012-01-01', '2012-01-01 00:00:00'),
-          ('Nick', 90, '2012-01-01', '2012-01-01 00:00:00')
+        INSERT INTO etl_source (
+            name
+          , amount
+          , the_date
+          , the_null_date
+          , the_time_at
+          , the_null_time_at
+        ) VALUES
+          ('Jeff', 100, '2012-01-02', NULL, '2012-01-02 00:00:01', NULL),
+          ('Ryan',  50, '2012-01-01', NULL, '2012-01-01 00:00:00', NULL),
+          ('Jack',  75, '2012-01-01', NULL, '2012-01-01 00:00:00', NULL),
+          ('Jeff',  10, '2012-01-01', NULL, '2012-01-01 00:00:00', NULL),
+          ('Jack',  45, '2012-01-01', NULL, '2012-01-01 00:00:00', NULL),
+          ('Nick', -90, '2012-01-01', NULL, '2012-01-01 00:00:00', NULL),
+          ('Nick',  90, '2012-01-01', NULL, '2012-01-01 00:00:00', NULL)
       ]
 
       client.close
@@ -48,17 +56,17 @@ describe ETL::Basic do
                   column:   :the_date).should == Date.parse('2012-01-02')
     end
 
-    it "finds the max for dates when a default floor is provided" do
+    it "defaults to the beginning of time date when a max date cannot be found" do
       etl.max_for(database:      :etl_test,
                   table:         :etl_source,
-                  column:        :the_date,
-                  default_floor: '2012-01-01').should == Date.parse('2012-01-02')
+                  column:        :the_null_date).should == Date.parse('1970-01-01')
     end
 
-    it "finds the max for dates" do
-      etl.max_for(database: :etl_test,
-                  table:    :etl_source,
-                  column:   :the_date).should == Date.parse('2012-01-02')
+    it "defaults to the specified default floor when a max date cannot be found" do
+      etl.max_for(database:      :etl_test,
+                  table:         :etl_source,
+                  column:        :the_null_date,
+                  default_floor: '2011-01-01').should == Date.parse('2011-01-01')
     end
 
     it "finds the max for datetimes" do
@@ -67,16 +75,24 @@ describe ETL::Basic do
                   column:   :the_time_at).should == Date.parse('2012-01-02')
     end
 
-    it "finds the max for datetimes when a default floor is provided" do
+    it "defaults to the beginning of time when a max datetime cannot be found" do
+      etl.max_for(database: :etl_test,
+                  table:    :etl_source,
+                  column:   :the_null_time_at).should == Date.parse('1970-01-01 00:00:00')
+    end
+
+    it "defaults to the specified default floor when a max datetime cannot be found" do
       etl.max_for(database:      :etl_test,
                   table:         :etl_source,
-                  column:        :the_time_at,
-                  default_floor: '2012-01-01 00:00:00').should == Date.parse('2012-01-02')
+                  column:        :the_null_time_at,
+                  default_floor: '2011-01-01 00:00:00').should == Date.parse('2011-01-01 00:00:00')
     end
 
     it "raises an error if a non-standard column is supplied with no default floor" do
       expect {
-        etl.max_for(database: :etl_test, table: :etl_source, column: :amount)
+        etl.max_for database: :etl_test,
+                    table:    :etl_source,
+                    column:   :amount
       }.to raise_exception
     end
 
