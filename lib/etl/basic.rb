@@ -14,7 +14,6 @@ module ETL
     attr_accessor :description
     attr_accessor :connection
     attr_reader   :logger
-    attr_accessor :parent
 
     def initialize attributes = {}
       attributes.keys.uniq.each do |attribute|
@@ -25,10 +24,6 @@ module ETL
     def config &block
       yield self if block_given?
       self
-    end
-
-    def owner
-      parent.owner
     end
 
     ORDERED_ETL_OPERATIONS = [
