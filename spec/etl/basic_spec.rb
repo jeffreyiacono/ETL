@@ -7,7 +7,7 @@ describe ETL::Basic do
 
   describe 'max_for' do
     let(:connection) { Mysql2::Client.new host: 'localhost', username: 'root', database: 'etl_test' }
-    let(:etl) { ETL::Basic.new connection: connection }
+    let(:etl)        { ETL::Basic.new connection: connection }
 
     before do
       client = Mysql2::Client.new host: 'localhost', username: 'root'
