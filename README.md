@@ -62,7 +62,7 @@ etl.config do |e|
     #       total_amount INT SIGNED NOT NULL,
     #       PRIMARY KEY (user_id),
     #       KEY (user_id, created_date),
-    #       KEY (created_date),
+    #       KEY (created_date)
     #     )
     #   EOS
   end
@@ -173,7 +173,7 @@ etl.config do |e|
     #       total_amount INT SIGNED NOT NULL,
     #       PRIMARY KEY (user_id),
     #       KEY (user_id, created_date),
-    #       KEY (created_date),
+    #       KEY (created_date)
     #     )
     #   EOS
   end
