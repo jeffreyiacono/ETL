@@ -334,32 +334,50 @@ evaluated to by what `#step` evaluates to.
 
 ## Logger Details
 
-The only method that currently generates a logging event (via the logger's `#log`
-) is the ETL's `#query`, which passes the following args as a hash:
+A logger must support two methods: `#log` and `#warn`. The ETL framework will
+enforce this interface and raise an exception if it is not met.
 
-- :emitter => a reference to the ETL instance's `self`
-- :query => the query that was run
-- :runtime => how long the query took to execute
+Both methods should accept a single hash argument. The argument will contain:
+
+- `:emitter` => a reference to the ETL instance's `self`
+- `:event_type` => a symbol that includes the type of event being logged. You
+  can use this value to derive which other data you'll have available
+
+When `:event_type` is equal to `:query`, you'll have the follow available in the
+hash argument:
+
+- `:sql` => the sql that was run
+- `:runtime` => how long the query took to execute
 
 The ETL gem enforces that the passed logger implement `warn` but this is for
-future use and is currently not used to report execeptions, etc.
+future use and is currently not used to report execeptions or other calamitous
+events.
 
-Following from this you can implement a logger as:
+Following from this you could implement a simple logger as:
 
 ```ruby
 class PutsLogger
-  def log packet
-    puts %[
-      #{packet[:emitter].description} executed #{packet[:query]}, which
-      completed at #{Time.now} and took #{packet[:runtime]} seconds to complete.
-    ]
+  def log data
+    case (event_type = data.delete(:event_type))
+    when :query
+      output =  "#{data[:emitter].description} executed #{data[:sql]}, "
+      output += "which completed at #{Time.now} and took #{data[:runtime]} "
+      output += "seconds to complete."
+    else
+      output = "no special logging for #{event_type} event_type yet"
+    end
+    puts output
   end
 
-  def warn packet
-    puts %[
-      [WARN] this is currently never called by the ETL gem,
-      but is here for future use and for the sake of completeness.
-    ]
+  def warn data
+    case (event_type = data.delete(:event_type))
+    when :query
+      output =  "[WARN] this is currently not called by the ETL gem, "
+      output += "but is here for future use and for the sake of completeness."
+    else
+      output = "no special warning for #{event_type} event_type yet"
+    end
+    puts output
   end
 end
 ```

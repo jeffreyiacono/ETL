@@ -77,26 +77,25 @@ module ETL
     end
 
     def query sql
-      time_and_log(query: sql) { connection.query sql }
+      time_and_log(event_type: :query, sql: sql) do
+        connection.query sql
+      end
     end
 
-    def log information = {}
-      @logger.log information.merge(emitter: self) if @logger
+    def log data = {}
+      @logger.log data.merge(emitter: self) if @logger
     end
 
-    def warn information = {}
-      @logger.warn information.merge(emitter: self) if @logger
+    def warn data = {}
+      @logger.warn data.merge(emitter: self) if @logger
     end
 
   protected
 
-    # take a hash of information and a block and starts a timer and then yields
-    # to the given block - it then calls #log with the information hash and
-    # merges in the runtime and returns the yielded block's return value
-    def time_and_log information = {}, &block
+    def time_and_log data = {}, &block
       start_runtime = Time.now
       retval = yield
-      log information.merge(runtime: Time.now - start_runtime)
+      log data.merge(runtime: Time.now - start_runtime)
       retval
     end
   end
