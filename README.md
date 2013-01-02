@@ -123,15 +123,6 @@ end
 At this point it is possible to run the ETL instance via:
 
 ```ruby
-etl.ensure_destination
-etl.before_etl
-etl.etl
-etl.after_etl
-```
-
-or via the more concise:
-
-```ruby
 etl.run
 ```
 which executes `#ensure_destination`, `#before_etl`, `#etl`, and `#after_etl` in
@@ -314,15 +305,6 @@ end
 ```
 
 At this point it is possible to run the ETL instance via:
-
-```ruby
-etl.ensure_destination
-etl.before_etl
-etl.etl
-etl.after_etl
-```
-
-or via the more concise:
 
 ```ruby
 etl.run
