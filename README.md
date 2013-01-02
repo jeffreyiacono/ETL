@@ -16,18 +16,18 @@ Or install it yourself as:
 
     $ gem install etl
 
-## ETL API
-
-The ETL framework has two basic types: `ETL::Basic` and `ETL::Incrementer`.
-
 ## ETL Dependencies
 
 Both ETLs depend on having a database connection that __must__ respond to
-`#query`. The [mysql2](https://github.com/brianmario/mysql2) is a good option.
+`#query`. [mysql2](https://github.com/brianmario/mysql2) is a good option.
 
 You can optionally supply a logger that __must__ respond to `#warn` and `#log`.
 Implementation of your logger of choice is left up to the developer. View the
 [logger details](#logger-details) to see what is logged and when.
+
+## ETL API
+
+The ETL framework has two basic types: `ETL::Basic` and `ETL::Iterator`.
 
 ### ETL::Basic
 
@@ -72,7 +72,7 @@ etl.config do |e|
     #
     # This can be thought of as a before-ETL hook that will fire only once. This
     # usage of this block is not very clear in the Basic ETL, but will in the
-    # Incrementer ETL when we introduce iteration.
+    # Iterator ETL when we introduce iteration.
     #
     # Again, the following convention is used:
     #
@@ -135,18 +135,18 @@ etl.run
 which executes `#ensure_destination`, `#before_etl`, `#etl`, and `#after_etl` in
 that order.
 
-### ETL::Incrementer
+### ETL::Iterator
 
-The Incrementer ETL provides all the functionality of the Basic ETL but additionally provides
+The Iterator ETL provides all the functionality of the Basic ETL but additionally provides
 the ability to iterate over a data set in the `#etl` block. When dealing with very large data sets
-or executing queries that, while optimized, are still slow then the Incrementer ETL is recommended.
+or executing queries that, while optimized, are still slow then the Iterator ETL is recommended.
 
-The Incrementer ETL has the following framework:
+The Iterator ETL has the following framework:
 
 ```ruby
-etl = ETL::Incrementer.new(description: "a description of what this ETL does",
-                           logger:      logger,
-                           connection:  connection)
+etl = ETL::Iterator.new(description: "a description of what this ETL does",
+                        logger:      logger,
+                        connection:  connection)
 ```
 
 where `logger` and `connection` are the same as described above.
@@ -183,7 +183,7 @@ etl.config do |e|
     #
     # This can be thought of as a before-ETL hook that will fire only once. This
     # usage of this block is not very clear in the Basic ETL, but will in the
-    # Incrementer ETL when we introduce iteration.
+    # Iterator ETL when we introduce iteration.
     #
     # Again, the following convention is used:
     #
@@ -253,7 +253,7 @@ etl.config do |e|
 
   e.etl do |e, lbound, ubound|
     # The etl block is the main part of the framework. Note: there are
-    # two extra args with the incrementer - "lbound" and "ubound"
+    # two extra args with the iterator - "lbound" and "ubound"
     #
     # "lbound" is the lower bound of the current iteration. When iterating
     # from 0 to 10 and stepping by 2, the lbound would equal 2 on the

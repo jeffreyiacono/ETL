@@ -1,16 +1,16 @@
-require 'date'
-require 'time'
-require 'etl/basic'
-
-# Incrementer ETL starts at the specified start and increments over the range
+# Iterator ETL starts at the specified start and iterates over the range
 # by the specified step up until the stop.
 #
 # Note that we want to memoize the start, step, and stop attributes because
 # we could get into a situation where a source table is growing faster than a
 # destination table can be built, resulting in an infinite loop, which would
 # make us sad.
+require 'date'
+require 'time'
+require 'etl/basic'
+
 module ETL
-  class Incrementer < ETL::Basic
+  class Iterator < ETL::Basic
     # A little metaprogramming to consolidate the generation of our
     # sql generating / querying methods.
     #

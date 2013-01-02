@@ -1,7 +1,7 @@
 require 'mysql2'
 require 'active_support/core_ext'
 require 'spec_helper'
-require './lib/etl/incrementer'
+require 'etl/iterator'
 
 def reset_test_env connection, &block
   connection.query %[DROP DATABASE IF EXISTS etl_test]
@@ -34,7 +34,7 @@ def reset_test_env connection, &block
   end
 end
 
-describe ETL::Incrementer do
+describe ETL::Iterator do
   it_behaves_like "basic etl", described_class
 
   describe '#run over full table' do

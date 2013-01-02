@@ -4,4 +4,4 @@ module Etl
 end
 
 require "etl/basic"
-require "etl/incrementer"
+require "etl/iterator"
