@@ -19,7 +19,9 @@ Or install it yourself as:
 ## ETL Dependencies
 
 Both ETLs depend on having a database connection that __must__ respond to
-`#query`. [mysql2](https://github.com/brianmario/mysql2) is a good option.
+`#query`. [mysql2](https://github.com/brianmario/mysql2) is a good option. You
+can also proxy another library using Ruby's `SimpleDelegator` and add a `#query`
+method if need be.
 
 You can optionally supply a logger that __must__ respond to `#warn` and `#log`.
 Implementation of your logger of choice is left up to the developer. View the
