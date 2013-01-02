@@ -1,6 +1,6 @@
 require 'mysql2'
 require 'spec_helper'
-require './lib/etl/basic'
+require 'etl/basic'
 
 describe ETL::Basic do
   it_behaves_like "basic etl", described_class

@@ -2,7 +2,6 @@
 #
 # Inherit from this class and add attributes and / or override #etl to add
 # more sophistication.
-
 require 'etl/helpers'
 
 module ETL
