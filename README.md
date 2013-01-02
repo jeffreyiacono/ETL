@@ -374,7 +374,7 @@ end
 
 ## License
 
-Copyright (c) 2012 Jeff Iacono & Square
+Copyright (c) 2012 Jeff Iacono & Square Inc.
 
 MIT License
 
