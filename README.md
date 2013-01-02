@@ -34,7 +34,7 @@ The ETL framework has two basic types: `ETL::Basic` and `ETL::Iterator`.
 ### ETL::Basic
 
 The Basic ETL, as the name suggests, is pretty basic and should be used when you
-want to run sequential SQL statements that do not require iteration.
+want to run sequential SQL statements.
 
 A Basic ETL has the following framework:
 
