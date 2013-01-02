@@ -333,7 +333,7 @@ hash argument:
 - `:sql` => the sql that was run
 - `:runtime` => how long the query took to execute
 
-The ETL gem enforces that the passed logger implement `warn` but this is for
+The ETL gem enforces that the passed logger implement `#warn` but this is for
 future use and is currently not used to report execeptions or other calamitous
 events.
 
