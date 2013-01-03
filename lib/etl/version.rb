@@ -1,3 +1,3 @@
-module Etl
+module ETL
   VERSION = "1.0.0.rc"
 end

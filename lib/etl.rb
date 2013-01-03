@@ -1,6 +1,6 @@
 require "etl/version"
 
-module Etl
+module ETL
 end
 
 require "etl/basic"

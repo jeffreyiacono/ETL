@@ -13,7 +13,7 @@ Gem::Specification.new do |gem|
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.name          = "etl"
   gem.require_paths = ["lib"]
-  gem.version       = Etl::VERSION
+  gem.version       = ETL::VERSION
 
   gem.add_runtime_dependency "activesupport", [">= 3.2.3"]
 
