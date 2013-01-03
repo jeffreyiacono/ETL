@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    etl (0.0.1)
+    etl (1.0.0.rc)
       activesupport (>= 3.2.3)
 
 GEM
