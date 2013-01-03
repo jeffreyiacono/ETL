@@ -7,7 +7,7 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    activesupport (3.2.9)
+    activesupport (3.2.10)
       i18n (~> 0.6)
       multi_json (~> 1.0)
     cane (2.5.0)
