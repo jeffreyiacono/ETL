@@ -49,8 +49,8 @@ module ETL
         if block
           instance_variable_set("@#{method}", block)
         else
-          instance_variable_get("@#{method}")
-            .call(self, *args) if instance_variable_get("@#{method}")
+          instance_variable_get("@#{method}").
+            call(self, *args) if instance_variable_get("@#{method}")
         end
       end
     end
