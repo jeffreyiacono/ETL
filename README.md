@@ -50,22 +50,23 @@ etl.config do |e|
     # For most ETLs you may want to ensure that the destination exists, so the
     # #ensure_destination block is ideally suited to fulfill this requirement.
     #
-    # e.query <<-EOS
+    # e.query %[
     #   YOUR BEFORE ETL SQL / CODE GOES HERE
-    # EOS
+    # ]
     #
     # By way of example:
     #
-    #   e.query <<-EOS
-    #     CREATE TABLE IF NOT EXISTS some_database.some_table (
-    #       user_id INT UNSIGNED NOT NULL,
-    #       created_date DATE NOT NULL,
-    #       total_amount INT SIGNED NOT NULL,
-    #       PRIMARY KEY (user_id),
-    #       KEY (user_id, created_date),
-    #       KEY (created_date)
-    #     )
-    #   EOS
+    e.query %[
+      CREATE TABLE IF NOT EXISTS some_database.some_destination_table (
+        user_id INT UNSIGNED NOT NULL,
+        created_date DATE NOT NULL,
+        total_amount INT SIGNED NOT NULL,
+        message VARCHAR(100) DEFAULT NULL,
+        PRIMARY KEY (user_id),
+        KEY (user_id, created_date),
+        KEY (created_date)
+      )
+    ]
   end
 
   e.before_etl do |e|
@@ -77,44 +78,52 @@ etl.config do |e|
     #
     # Again, the following convention is used:
     #
-    # e.query <<-EOS
+    # e.query %[
     #   YOUR BEFORE ETL SQL / CODE GOES HERE
-    # EOS
+    # ]
     #
     # As an example, let's say we want to get rid of all entries that have an
     # amount less than zero before moving on to our actual etl:
     #
-    #   e.query <<-EOS
-    #     DELETE FROM some_database.some_source_table WHERE amount < 0
-    #   EOS
+    e.query %[
+      DELETE FROM some_database.some_source_table WHERE amount < 0
+    ]
   end
 
   e.etl do |e|
     # Here is where the magic happens! This block contains the main ETL SQL.
     # The following convention is used:
     #
-    # e.query <<-EOS
+    # e.query %[
     #   YOU ETL SQL / CODE GOES HERE
-    # EOS
+    # ]
     #
     # For example:
     #
-    #   e.query <<-EOS
-    #     REPLACE INTO some_database.some_destination
-    #     SELECT
-    #         user_id
-    #       , DATE(created_at) AS created_date
-    #       , SUM(amount) AS total_amount
-    #     FROM
-    #       some_database.some_source_table sst
-    #     GROUP BY
-    #         sst.user_id
-    #       , sst.DATE(created_at)
-    #   EOS
+    e.query %[
+      REPLACE INTO some_database.some_destination_table
+      SELECT
+          user_id
+        , DATE(created_at) AS created_date
+        , SUM(amount) AS total_amount
+      FROM
+        some_database.some_source_table sst
+      GROUP BY
+          sst.user_id
+        , sst.DATE(created_at)
+    ]
   end
 
   e.after_etl do |e|
     # All post-ETL work is performed in this block.
+    #
+    # Again, to finish up with an example:
+    #
+    e.query %[
+      UPDATE some_database.some_destination_table
+      SET message = "WOW"
+      WHERE total_amount > 100
+    ]
   end
 end
 ```
@@ -151,22 +160,23 @@ etl.config do |e|
     # For most ETLs you may want to ensure that the destination exists, so the
     # #ensure_destination block is ideally suited to fulfill this requirement.
     #
-    # e.query <<-EOS
+    # e.query %[
     #   YOUR BEFORE ETL SQL / CODE GOES HERE
-    # EOS
+    # ]
     #
     # By way of example:
     #
-    #   e.query <<-EOS
-    #     CREATE TABLE IF NOT EXISTS some_database.some_table (
-    #       user_id INT UNSIGNED NOT NULL,
-    #       created_date DATE NOT NULL,
-    #       total_amount INT SIGNED NOT NULL,
-    #       PRIMARY KEY (user_id),
-    #       KEY (user_id, created_date),
-    #       KEY (created_date)
-    #     )
-    #   EOS
+    e.query %[
+      CREATE TABLE IF NOT EXISTS some_database.some_destination_table (
+        user_id INT UNSIGNED NOT NULL,
+        created_date DATE NOT NULL,
+        total_amount INT SIGNED NOT NULL,
+        message VARCHAR(100) DEFAULT NULL,
+        PRIMARY KEY (user_id),
+        KEY (user_id, created_date),
+        KEY (created_date)
+      )
+    ]
   end
 
   e.before_etl do |e|
@@ -178,16 +188,17 @@ etl.config do |e|
     #
     # Again, the following convention is used:
     #
-    # e.query <<-EOS
+    # e.query %[
     #   YOUR BEFORE ETL SQL / CODE GOES HERE
-    # EOS
+    # ]
     #
     # As an example, let's say we want to get rid of all entries that have an
     # amount less than zero before moving on to our actual etl:
     #
-    #   e.query <<-EOS
-    #     DELETE FROM some_database.some_source_table WHERE amount < 0
-    #   EOS
+    e.query %[
+      DELETE FROM some_database.some_source_table
+      WHERE amount < 0
+    ]
   end
 
   e.start do |e|
@@ -200,10 +211,11 @@ etl.config do |e|
     #
     # As an example:
     #
-    #   res = e.query <<-EOS
-    #     SELECT MAX(id) AS the_max FROM some_database.some_destination_table
-    #   EOS
-    #   res.to_a.first['the_max']
+    res = e.query %[
+      SELECT COALESCE(MAX(created_date), '1970-01-01') AS the_max
+      FROM some_database.some_destination_table
+    ]
+    res.to_a.first['the_max']
   end
 
   e.step do |e|
@@ -218,7 +230,7 @@ etl.config do |e|
     # And, when working with dates, the step block should be set to a number
     # of days. To iterate over 7 days at a time, then use:
     #
-    #   7.days
+    7.days
   end
 
   e.stop do |e|
@@ -236,10 +248,11 @@ etl.config do |e|
     #
     # Or as a code example:
     #
-    #   res = e.query <<-EOS
-    #     SELECT MAX(id) AS the_max FROM some_database.some_source_table
-    #   EOS
-    #   res.to_a.first['the_max']
+    res = e.query %[
+      SELECT DATE(MAX(created_at)) AS the_max
+      FROM some_database.some_source_table
+    ]
+    res.to_a.first['the_max']
   end
 
   e.etl do |e, lbound, ubound|
@@ -258,8 +271,8 @@ etl.config do |e|
     #
     # As a first example, to iterate over a set of ids:
     #
-    #   sql = <<-EOS
-    #     REPLACE INTO some_database.some_destination
+    #   e.query %[
+    #     REPLACE INTO some_database.some_destination_table
     #     SELECT
     #         user_id
     #       , SUM(amount) AS total_amount
@@ -269,27 +282,25 @@ etl.config do |e|
     #       sst.user_id > #{lbound} AND sst.user_id <= #{ubound}
     #     GROUP BY
     #       sst.user_id
-    #   EOS
-    #   e.query(sql)
+    #   ]
     #
     # To "window" a SQL query using dates:
     #
-    #   sql = <<-EOS
-    #     REPLACE INTO some_database.some_destination
-    #     SELECT
-    #         DATE(created_at)
-    #       , SUM(amount) AS total_amount
-    #     FROM
-    #       some_database.some_source_table sst
-    #     WHERE
-    #       -- Note the usage of quotes surrounding the lbound and ubound vars.
-    #       -- This is is required when dealing with dates / datetimes
-    #       sst.created_at >= '#{lbound}' AND sst.created_at < '#{ubound}'
-    #     GROUP BY
-    #       sst.user_id
-    #   EOS
-    #   e.query(sql)
-    #
+    e.query %[
+      REPLACE INTO some_database.some_destination_table
+      SELECT
+          DATE(created_at)
+        , SUM(amount) AS total_amount
+      FROM
+        some_database.some_source_table sst
+      WHERE
+        -- Note the usage of quotes surrounding the lbound and ubound vars.
+        -- This is is required when dealing with dates / datetimes
+        sst.created_at >= '#{lbound}' AND sst.created_at < '#{ubound}'
+      GROUP BY
+        sst.user_id
+    ]
+
     # Note that there is no sql sanitization here so there is *potential* for SQL
     # injection. That being said you'll likely be using this gem in an internal
     # tool so hopefully your co-workers are not looking to sabotage your ETL
@@ -298,6 +309,14 @@ etl.config do |e|
 
   e.after_etl do |e|
     # All post-ETL work is performed in this block.
+    #
+    # Again, to finish up with an example:
+    #
+    e.query %[
+      UPDATE some_database.some_destination_table
+      SET message = "WOW"
+      WHERE total_amount > 100
+    ]
   end
 end
 ```
