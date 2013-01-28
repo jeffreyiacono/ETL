@@ -1,6 +1,5 @@
 require 'mysql2'
 require 'active_support/time'
-require 'spec_helper'
 require 'etl/iterator'
 
 def reset_test_env connection, &block
@@ -35,11 +34,21 @@ def reset_test_env connection, &block
 end
 
 describe ETL::Iterator do
-  it_behaves_like "basic etl", described_class
+  let(:logger) { nil }
+
+  describe "logger=" do
+    let(:etl) { described_class.new connection: stub }
+
+    it 'assigns when the param responds to #log and #warn' do
+      logger = stub
+      etl.logger = logger
+      etl.logger.should == logger
+    end
+  end
 
   describe '#run over full table' do
     let(:connection) { Mysql2::Client.new host: 'localhost', username: 'root', database: 'etl_test' }
-    let(:etl)        { described_class.new connection: connection }
+    let(:etl)        { described_class.new connection: connection, logger: logger }
 
     before { reset_test_env connection }
     after  { connection.close }
@@ -110,7 +119,7 @@ describe ETL::Iterator do
 
   describe '#run over part of table' do
     let(:connection) { Mysql2::Client.new host: 'localhost', username: 'root', database: 'etl_test' }
-    let(:etl)        { described_class.new connection: connection }
+    let(:etl)        { described_class.new connection: connection, logger: logger }
 
     before { reset_test_env connection }
     after  { connection.close }
@@ -167,7 +176,7 @@ describe ETL::Iterator do
 
   describe "#run over gappy data" do
     let(:connection) { Mysql2::Client.new host: 'localhost', username: 'root', database: 'etl_test' }
-    let(:etl)        { described_class.new connection: connection }
+    let(:etl)        { described_class.new connection: connection, logger: logger }
 
     before do
       reset_test_env(connection) do |connection|
@@ -255,7 +264,7 @@ describe ETL::Iterator do
 
   describe "#run over date data" do
     let(:connection) { Mysql2::Client.new host: 'localhost', username: 'root', database: 'etl_test' }
-    let(:etl)        { described_class.new connection: connection }
+    let(:etl)        { described_class.new connection: connection, logger: logger }
 
     before do
       reset_test_env(connection) do |connection|
@@ -357,7 +366,7 @@ describe ETL::Iterator do
 
   describe "#run over datetime data" do
     let(:connection) { Mysql2::Client.new host: 'localhost', username: 'root', database: 'etl_test' }
-    let(:etl)        { described_class.new connection: connection }
+    let(:etl)        { described_class.new connection: connection, logger: logger }
 
     before do
       reset_test_env(connection) do |connection|

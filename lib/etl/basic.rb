@@ -3,6 +3,7 @@
 # Inherit from this class and add attributes and / or override #etl to add
 # more sophistication.
 require 'etl/helpers'
+require 'logger'
 
 module ETL
   class Basic
@@ -16,6 +17,7 @@ module ETL
       attributes.keys.uniq.each do |attribute|
         self.send "#{attribute}=", attributes[attribute]
       end
+      default_logger! unless attributes.keys.include?(:logger)
     end
 
     def config &block
@@ -62,39 +64,58 @@ module ETL
     end
 
     def logger= logger
-      [:log,
-       :warn
-      ].each do |required_method|
-        unless logger.respond_to? required_method
-          raise ArgumentError, <<-EOS
-            logger must implement ##{required_method}
-          EOS
-        end
-      end
-
       @logger = logger
     end
 
+    def logger?
+      !!@logger
+    end
+
     def query sql
-      time_and_log(event_type: :query, sql: sql) do
+      time_and_log(sql: sql) do
         connection.query sql
       end
     end
 
-    def log data = {}
-      @logger.log data.merge(emitter: self) if @logger
+    def info data = {}
+      logger.info data.merge(emitter: self) if @logger
     end
 
-    def warn data = {}
-      @logger.warn data.merge(emitter: self) if @logger
+    def debug data = {}
+      logger.debug data.merge(emitter: self) if @logger
+    end
+
+    def default_logger!
+      @logger = default_logger
     end
 
   protected
 
+    def default_logger
+      ::Logger.new(STDOUT).tap do |logger|
+        logger.formatter = proc do |severity, datetime, progname, msg|
+          lead  = "[#{datetime}] #{severity} #{msg[:event_type]}"
+          desc  = "\"#{msg[:emitter].description || 'no description given'}\""
+          desc += " (object #{msg[:emitter].object_id})"
+
+          case msg[:event_type]
+          when :query_start
+            "#{lead} for #{desc}\n#{msg[:sql]}\n"
+          when :query_complete
+            "#{lead} for #{desc} runtime: #{msg[:runtime]}s\n"
+          else
+            "#{msg}"
+          end
+        end
+      end
+    end
+
     def time_and_log data = {}, &block
       start_runtime = Time.now
+      debug data.merge(event_type: :query_start)
       retval = yield
-      log data.merge(runtime: Time.now - start_runtime)
+      info data.merge(event_type: :query_complete,
+                      runtime: Time.now - start_runtime)
       retval
     end
   end

@@ -1,13 +1,22 @@
 require 'mysql2'
-require 'spec_helper'
 require 'etl/basic'
 
 describe ETL::Basic do
-  it_behaves_like "basic etl", described_class
+  let(:logger) { nil }
+
+  describe "logger=" do
+    let(:etl) { described_class.new connection: stub }
+
+    it 'assigns when the param responds to #log and #warn' do
+      logger = stub
+      etl.logger = logger
+      etl.logger.should == logger
+    end
+  end
 
   describe 'max_for' do
     let(:connection) { Mysql2::Client.new host: 'localhost', username: 'root', database: 'etl_test' }
-    let(:etl)        { ETL::Basic.new connection: connection }
+    let(:etl)        { ETL::Basic.new connection: connection, logger: logger }
 
     before do
       client = Mysql2::Client.new host: 'localhost', username: 'root'
@@ -106,7 +115,7 @@ describe ETL::Basic do
 
   describe '#run' do
     let(:connection) { Mysql2::Client.new host: 'localhost', username: 'root', database: 'etl_test' }
-    let(:etl)        { ETL::Basic.new connection: connection }
+    let(:etl)        { ETL::Basic.new connection: connection, logger: logger }
 
     before do
       client = Mysql2::Client.new host: 'localhost', username: 'root'
@@ -184,7 +193,7 @@ describe ETL::Basic do
 
   describe '#run operations specified for exclusion' do
     let(:connection) { stub }
-    let(:etl)        { ETL::Basic.new connection: connection }
+    let(:etl)        { ETL::Basic.new connection: connection, logger: logger }
 
     it "does not call the specified method" do
       etl.ensure_destination {}

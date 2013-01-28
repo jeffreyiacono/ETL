@@ -23,9 +23,9 @@ to `#query`. The [mysql2](https://github.com/brianmario/mysql2) gem is a good op
 You can also proxy another library using Ruby's `SimpleDelegator` and add a `#query`
 method if need be.
 
-You can optionally supply a logger that __must__ respond to `#warn` and `#log`.
-Implementation of your logger of choice is left up to the developer. View the
-[logger details](#logger-details) to see what is logged and when.
+The gem comes bundled with a default logger. If you'd like to write your own
+just make sure that it implements `#debug` and `#info`. For more information
+on what is logged and when, view the [logger details](#logger-details).
 
 ## ETL API
 
@@ -40,7 +40,6 @@ A Basic ETL has the following framework:
 
 ```ruby
 etl = ETL::Basic.new(description: "a description of what this ETL does",
-                     logger:      logger,
                      connection:  connection)
 ```
 which can then be configured:
@@ -138,11 +137,10 @@ The Iterator ETL has the following framework:
 
 ```ruby
 etl = ETL::Iterator.new(description: "a description of what this ETL does",
-                        logger:      logger,
                         connection:  connection)
 ```
 
-where `logger` and `connection` are the same as described above.
+where `connection` is the same as described above.
 
 Next we can configure the ETL:
 
@@ -318,8 +316,7 @@ evaluated to by what `#step` evaluates to.
 
 ## Logger Details
 
-A logger must support two methods: `#log` and `#warn`. The ETL framework will
-enforce this interface and raise an exception if it is not met.
+A logger must support two methods: `#info` and `#warn`.
 
 Both methods should accept a single hash argument. The argument will contain:
 
@@ -327,41 +324,51 @@ Both methods should accept a single hash argument. The argument will contain:
 - `:event_type` => a symbol that includes the type of event being logged. You
   can use this value to derive which other data you'll have available
 
-When `:event_type` is equal to `:query`, you'll have the follow available in the
-hash argument:
+When `:event_type` is equal to `:query_start`, you'll have the following
+available in the hash argument:
+
+- `:sql` => the sql that is going to be run
+
+These events are logged at the debug level.
+
+When `:event_type` is equal to `:query_complete`, you'll have the following
+available in the hash argument:
 
 - `:sql` => the sql that was run
 - `:runtime` => how long the query took to execute
 
-The ETL gem enforces that the passed logger implement `#warn` but this is for
-future use and is currently not used to report execeptions or other calamitous
-events.
+These events are logged at the info level.
 
 Following from this you could implement a simple logger as:
 
 ```ruby
 class PutsLogger
-  def log data
-    case (event_type = data.delete(:event_type))
-    when :query
-      output =  "#{data[:emitter].description} executed #{data[:sql]}, "
-      output += "which completed at #{Time.now} and took #{data[:runtime]} "
-      output += "seconds to complete."
-    else
-      output = "no special logging for #{event_type} event_type yet"
-    end
-    puts output
+  def info data
+    @data = data
+    write!
   end
 
-  def warn data
-    case (event_type = data.delete(:event_type))
-    when :query
-      output =  "[WARN] this is currently not called by the ETL gem, "
-      output += "but is here for future use and for the sake of completeness."
+  def debug data
+    @data = data
+    write!
+  end
+
+private
+
+  def write!
+    case (event_type = @data.delete(:event_type))
+    when :query_start
+      output =  "#{@data[:emitter].description} is about to run\n"
+      output += "#{@data[:sql]}\n"
+    when :query_complete
+      output =  "#{@data[:emitter].description} executed:\n"
+      output += "#{@data[:sql]}\n"
+      output += "query completed at #{Time.now} and took #{@data[:runtime]}s\n"
     else
-      output = "no special warning for #{event_type} event_type yet"
+      output = "no special logging for #{event_type} event_type yet\n"
     end
     puts output
+    @data = nil
   end
 end
 ```
