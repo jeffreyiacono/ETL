@@ -5,7 +5,7 @@ require 'date'
 require 'time'
 
 class ETL
-  include ::ETLHelpers
+  include Helpers
 
   attr_accessor :description
   attr_accessor :connection
