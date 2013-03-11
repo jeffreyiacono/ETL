@@ -120,7 +120,7 @@ etl.run
 which executes `#ensure_destination`, `#before_etl`, `#etl`, and `#after_etl` in
 that order.
 
-### ETL with iterator
+### ETL with iteration
 
 To add in iteration, simply supply `#start`, `#step`, and `#stop` blocks. This
 is useful when dealing with large data sets or when executing queries that,
