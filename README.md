@@ -6,7 +6,7 @@ Extract, transform, and load data with ruby!
 
 Add this line to your application's Gemfile:
 
-    gem 'etl'
+    gem 'ETL'
 
 And then execute:
 
@@ -14,11 +14,11 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install etl
+    $ gem install ETL
 
 ## ETL Dependencies
 
-Both ETLs depend on having a database connection object that __must__ respond
+ETL depends on having a database connection object that __must__ respond
 to `#query`. The [mysql2](https://github.com/brianmario/mysql2) gem is a good option.
 You can also proxy another library using Ruby's `SimpleDelegator` and add a `#query`
 method if need be.
@@ -27,36 +27,28 @@ The gem comes bundled with a default logger. If you'd like to write your own
 just make sure that it implements `#debug` and `#info`. For more information
 on what is logged and when, view the [logger details](#logger-details).
 
-## ETL API
+### Basic ETL
 
-The ETL framework has two basic types: `ETL::Basic` and `ETL::Iterator`.
-
-### ETL::Basic
-
-The Basic ETL, as the name suggests, is pretty basic and should be used when you
-want to run sequential SQL statements.
-
-A Basic ETL has the following framework:
+To run basic ETL that is composed of sequential SQL statements, start by
+creating a new ETL instance:
 
 ```ruby
-etl = ETL::Basic.new(description: "a description of what this ETL does",
-                     connection:  connection)
+etl = ETL.new(description: "a description of what this ETL does",
+              connection:  connection)
 ```
 which can then be configured:
 
 ```ruby
-etl.config do |e|
-  e.ensure_destination do |e|
+etl.config do |etl|
+  etl.ensure_destination do |etl|
     # For most ETLs you may want to ensure that the destination exists, so the
     # #ensure_destination block is ideally suited to fulfill this requirement.
     #
-    # e.query %[
-    #   YOUR BEFORE ETL SQL / CODE GOES HERE
-    # ]
+    # etl.query %[YOUR BEFORE ETL SQL / CODE GOES HERE]
     #
     # By way of example:
     #
-    e.query %[
+    etl.query %[
       CREATE TABLE IF NOT EXISTS some_database.some_destination_table (
         user_id INT UNSIGNED NOT NULL,
         created_date DATE NOT NULL,
@@ -65,42 +57,36 @@ etl.config do |e|
         PRIMARY KEY (user_id),
         KEY (user_id, created_date),
         KEY (created_date)
-      )
-    ]
+      )]
   end
 
-  e.before_etl do |e|
+  etl.before_etl do |etl|
     # All pre-ETL work is performed in this block.
     #
-    # This can be thought of as a before-ETL hook that will fire only once. This
-    # usage of this block is not very clear in the Basic ETL, but will in the
-    # Iterator ETL when we introduce iteration.
+    # This can be thought of as a before-ETL hook that will fire only once. When
+    # you are not leveraging the ETL iteration capabilities, the value of this
+    # block vs the #etl block is not very clear. We will see how and when to
+    # leverage this block effectively when we introduce iteration.
     #
     # Again, the following convention is used:
     #
-    # e.query %[
-    #   YOUR BEFORE ETL SQL / CODE GOES HERE
-    # ]
+    # etl.query %[YOUR BEFORE ETL SQL / CODE GOES HERE]
     #
     # As an example, let's say we want to get rid of all entries that have an
     # amount less than zero before moving on to our actual etl:
     #
-    e.query %[
-      DELETE FROM some_database.some_source_table WHERE amount < 0
-    ]
+    etl.query %[DELETE FROM some_database.some_source_table WHERE amount < 0]
   end
 
-  e.etl do |e|
+  etl.etl do |etl|
     # Here is where the magic happens! This block contains the main ETL SQL.
     # The following convention is used:
     #
-    # e.query %[
-    #   YOU ETL SQL / CODE GOES HERE
-    # ]
+    # etl.query %[YOU ETL SQL / CODE GOES HERE]
     #
     # For example:
     #
-    e.query %[
+    etl.query %[
       REPLACE INTO some_database.some_destination_table
       SELECT
           user_id
@@ -110,20 +96,18 @@ etl.config do |e|
         some_database.some_source_table sst
       GROUP BY
           sst.user_id
-        , sst.DATE(created_at)
-    ]
+        , sst.DATE(created_at)]
   end
 
-  e.after_etl do |e|
+  etl.after_etl do |etl|
     # All post-ETL work is performed in this block.
     #
     # Again, to finish up with an example:
     #
-    e.query %[
+    etl.query %[
       UPDATE some_database.some_destination_table
       SET message = "WOW"
-      WHERE total_amount > 100
-    ]
+      WHERE total_amount > 100]
   end
 end
 ```
@@ -136,17 +120,17 @@ etl.run
 which executes `#ensure_destination`, `#before_etl`, `#etl`, and `#after_etl` in
 that order.
 
-### ETL::Iterator
+### ETL with iteration
 
-The Iterator ETL provides all the functionality of the Basic ETL but additionally provides
-the ability to iterate over a data set in the `#etl` block. When dealing with very large data sets
-or executing queries that, while optimized, are still slow then the Iterator ETL is recommended.
+To add in iteration, simply supply `#start`, `#step`, and `#stop` blocks. This
+is useful when dealing with large data sets or when executing queries that,
+while optimized, are still slow.
 
-The Iterator ETL has the following framework:
+Again, to kick things off:
 
 ```ruby
-etl = ETL::Iterator.new(description: "a description of what this ETL does",
-                        connection:  connection)
+etl = ETL.new(description: "a description of what this ETL does",
+              connection:  connection)
 ```
 
 where `connection` is the same as described above.
@@ -155,18 +139,18 @@ Next we can configure the ETL:
 
 ```ruby
 # assuming we have the ETL instance from above
-etl.config do |e|
-  e.ensure_destination do |e|
+etl.config do |etl|
+  etl.ensure_destination do |etl|
     # For most ETLs you may want to ensure that the destination exists, so the
     # #ensure_destination block is ideally suited to fulfill this requirement.
     #
-    # e.query %[
+    # etl.query %[
     #   YOUR BEFORE ETL SQL / CODE GOES HERE
     # ]
     #
     # By way of example:
     #
-    e.query %[
+    etl.query %[
       CREATE TABLE IF NOT EXISTS some_database.some_destination_table (
         user_id INT UNSIGNED NOT NULL,
         created_date DATE NOT NULL,
@@ -175,33 +159,29 @@ etl.config do |e|
         PRIMARY KEY (user_id),
         KEY (user_id, created_date),
         KEY (created_date)
-      )
-    ]
+      )]
   end
 
-  e.before_etl do |e|
+  etl.before_etl do |etl|
     # All pre-ETL work is performed in this block.
     #
-    # This can be thought of as a before-ETL hook that will fire only once. This
-    # usage of this block is not very clear in the Basic ETL, but will in the
-    # Iterator ETL when we introduce iteration.
+    # Now that we are leveraging iteration the #before_etl block becomes
+    # more useful as a way to execute an operation once before we begin
+    # our iteration.
     #
     # Again, the following convention is used:
     #
-    # e.query %[
-    #   YOUR BEFORE ETL SQL / CODE GOES HERE
-    # ]
+    # etl.query %[YOUR BEFORE ETL SQL / CODE GOES HERE]
     #
     # As an example, let's say we want to get rid of all entries that have an
     # amount less than zero before moving on to our actual etl:
     #
-    e.query %[
+    etl.query %[
       DELETE FROM some_database.some_source_table
-      WHERE amount < 0
-    ]
+      WHERE amount < 0]
   end
 
-  e.start do |e|
+  etl.start do |etl|
     # This defines where the ETL should start. This can be a flat number
     # or date, or even SQL / other code can be executed to produce a starting
     # value.
@@ -211,14 +191,14 @@ etl.config do |e|
     #
     # As an example:
     #
-    res = e.query %[
+    res = etl.query %[
       SELECT COALESCE(MAX(created_date), '1970-01-01') AS the_max
-      FROM some_database.some_destination_table
-    ]
+      FROM some_database.some_destination_table]
+
     res.to_a.first['the_max']
   end
 
-  e.step do |e|
+  etl.step do |etl|
     # The step block defines the size of the iteration block. To iterate by
     # ten records, the step block should be set to return 10.
     #
@@ -233,7 +213,7 @@ etl.config do |e|
     7.days
   end
 
-  e.stop do |e|
+  etl.stop do |etl|
     # The stop block defines when the iteration should halt.
     # Again, this can be a flat value or code. Either way, one value *must* be
     # returned.
@@ -248,14 +228,14 @@ etl.config do |e|
     #
     # Or as a code example:
     #
-    res = e.query %[
+    res = etl.query %[
       SELECT DATE(MAX(created_at)) AS the_max
-      FROM some_database.some_source_table
-    ]
+      FROM some_database.some_source_table]
+
     res.to_a.first['the_max']
   end
 
-  e.etl do |e, lbound, ubound|
+  etl.etl do |etl, lbound, ubound|
     # The etl block is the main part of the framework. Note: there are
     # two extra args with the iterator - "lbound" and "ubound"
     #
@@ -271,7 +251,7 @@ etl.config do |e|
     #
     # As a first example, to iterate over a set of ids:
     #
-    #   e.query %[
+    #   etl.query %[
     #     REPLACE INTO some_database.some_destination_table
     #     SELECT
     #         user_id
@@ -281,12 +261,11 @@ etl.config do |e|
     #     WHERE
     #       sst.user_id > #{lbound} AND sst.user_id <= #{ubound}
     #     GROUP BY
-    #       sst.user_id
-    #   ]
+    #       sst.user_id]
     #
     # To "window" a SQL query using dates:
     #
-    e.query %[
+    etl.query %[
       REPLACE INTO some_database.some_destination_table
       SELECT
           DATE(created_at)
@@ -298,8 +277,7 @@ etl.config do |e|
         -- This is is required when dealing with dates / datetimes
         sst.created_at >= '#{lbound}' AND sst.created_at < '#{ubound}'
       GROUP BY
-        sst.user_id
-    ]
+        sst.user_id]
 
     # Note that there is no sql sanitization here so there is *potential* for SQL
     # injection. That being said you'll likely be using this gem in an internal
@@ -307,16 +285,15 @@ etl.config do |e|
     # pipeline. Just be aware of this and handle it as you see fit.
   end
 
-  e.after_etl do |e|
+  etl.after_etl do |etl|
     # All post-ETL work is performed in this block.
     #
     # Again, to finish up with an example:
     #
-    e.query %[
+    etl.query %[
       UPDATE some_database.some_destination_table
       SET message = "WOW"
-      WHERE total_amount > 100
-    ]
+      WHERE total_amount > 100]
   end
 end
 ```
