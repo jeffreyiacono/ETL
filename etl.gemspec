@@ -5,13 +5,13 @@ Gem::Specification.new do |gem|
   gem.authors       = ["Jeff Iacono"]
   gem.email         = ["iacono@squareup.com"]
   gem.description   = %q{Extract, Transform, and Load (ETL) ruby wrapper}
-  gem.summary       = %q{Extract, Transform, and Load (ETL) ruby wrapper. Supports basic ETL operations along with iteration.}
+  gem.summary       = %q{Extract, Transform, and Load (ETL) ruby wrapper. Supports basic and iterative ETL operations.}
   gem.homepage      = "https://github.com/square/ETL"
 
   gem.files         = `git ls-files`.split($\)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
-  gem.name          = "etl"
+  gem.name          = "ETL"
   gem.require_paths = ["lib"]
   gem.version       = ETL::VERSION
 

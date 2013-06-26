@@ -16,27 +16,115 @@ def reset_test_env connection, &block
   else
     connection.query %[
       CREATE TABLE etl_source (
-        id INT NOT NULL
-      , name VARCHAR(10)
-      , amount INT(11) DEFAULT 0
-      , PRIMARY KEY (id))]
+          id INT NOT NULL
+        , name VARCHAR(10)
+        , amount INT(11) DEFAULT 0
+        , PRIMARY KEY (id))]
 
     connection.query %[
       INSERT INTO etl_test.etl_source (id, name, amount)
       VALUES
         (1, 'Jeff', 100),
-        (2, 'Ryan', 50),
-        (3, 'Jack', 75),
-        (4, 'Jeff', 10),
-        (5, 'Jack', 45),
+        (2, 'Ryan',  50),
+        (3, 'Jack',  75),
+        (4, 'Jeff',  10),
+        (5, 'Jack',  45),
         (6, 'Nick', -90),
-        (7, 'Nick', 90)
+        (7, 'Nick',  90)
     ]
   end
 end
 
 describe ETL do
   let(:logger) { nil }
+
+  describe "deprecations" do
+    let(:etl) { described_class.new }
+
+    context "#ensure_destination" do
+      it "does not warn when no args are passed" do
+        etl.should_receive(:warn).never
+        etl.ensure_destination {}
+      end
+
+      it "warns when args are passed that this is deprecated" do
+        etl.should_receive(:warn).with("DEPRECATED: passing arguments to #ensure_destination will be removed in an upcoming release and will raise an exception. Please remove this from your code.")
+        etl.ensure_destination('some arg') {}
+      end
+    end
+
+    context "#before_etl" do
+      it "does not warn when no args are passed" do
+        etl.should_receive(:warn).never
+        etl.before_etl {}
+      end
+
+      it "warns when args are passed that this is deprecated" do
+        etl.should_receive(:warn).with("DEPRECATED: passing arguments to #before_etl will be removed in an upcoming release and will raise an exception. Please remove this from your code.")
+        etl.before_etl('some arg') {}
+      end
+    end
+
+    context "#start" do
+      it "does not warn when no args are passed" do
+        etl.should_receive(:warn).never
+        etl.start {}
+      end
+
+      it "warns when args are passed that this is deprecated" do
+        etl.should_receive(:warn).with("DEPRECATED: passing arguments to #start will be removed in an upcoming release and will raise an exception. Please remove this from your code.")
+        etl.start('some arg') {}
+      end
+    end
+
+    context "#step" do
+      it "does not warn when no args are passed" do
+        etl.should_receive(:warn).never
+        etl.step {}
+      end
+
+      it "warns when args are passed that this is deprecated" do
+        etl.should_receive(:warn).with("DEPRECATED: passing arguments to #step will be removed in an upcoming release and will raise an exception. Please remove this from your code.")
+        etl.step('some arg') {}
+      end
+    end
+
+    context "#stop" do
+      it "does not warn when no args are passed" do
+        etl.should_receive(:warn).never
+        etl.stop {}
+      end
+
+      it "warns when args are passed that this is deprecated" do
+        etl.should_receive(:warn).with("DEPRECATED: passing arguments to #stop will be removed in an upcoming release and will raise an exception. Please remove this from your code.")
+        etl.stop('some arg') {}
+      end
+    end
+
+    context "#etl" do
+      it "does not warn when no args are passed" do
+        etl.should_receive(:warn).never
+        etl.etl {}
+      end
+
+      it "warns when args are passed that this is deprecated" do
+        etl.should_receive(:warn).with("DEPRECATED: passing arguments to #etl will be removed in an upcoming release and will raise an exception. Please remove this from your code.")
+        etl.etl('some arg') {}
+      end
+    end
+
+    context "#after_etl" do
+      it "does not warn when no args are passed" do
+        etl.should_receive(:warn).never
+        etl.after_etl {}
+      end
+
+      it "warns when args are passed that this is deprecated" do
+        etl.should_receive(:warn).with("DEPRECATED: passing arguments to #after_etl will be removed in an upcoming release and will raise an exception. Please remove this from your code.")
+        etl.after_etl('some arg') {}
+      end
+    end
+  end
 
   describe ".connection=" do
     let(:class_level_connection) { stub('class_level_connection') }
@@ -78,14 +166,14 @@ describe ETL do
       client.query %[USE etl_test]
       client.query %[
         CREATE TABLE IF NOT EXISTS etl_source (
-          id INT(11) NOT NULL AUTO_INCREMENT
-        , name VARCHAR(10)
-        , amount INT(11) DEFAULT 0
-        , the_date DATE DEFAULT NULL
-        , the_null_date DATE DEFAULT NULL
-        , the_time_at DATETIME DEFAULT NULL
-        , the_null_time_at DATETIME DEFAULT NULL
-        , PRIMARY KEY (id))]
+            id INT(11) NOT NULL AUTO_INCREMENT
+          , name VARCHAR(10)
+          , amount INT(11) DEFAULT 0
+          , the_date DATE DEFAULT NULL
+          , the_null_date DATE DEFAULT NULL
+          , the_time_at DATETIME DEFAULT NULL
+          , the_null_time_at DATETIME DEFAULT NULL
+          , PRIMARY KEY (id))]
 
       client.query %[
         INSERT INTO etl_source (
@@ -116,9 +204,9 @@ describe ETL do
     end
 
     it "defaults to the beginning of time date when a max date cannot be found" do
-      etl.max_for(database:      :etl_test,
-                  table:         :etl_source,
-                  column:        :the_null_date).should == Date.parse('1970-01-01')
+      etl.max_for(database: :etl_test,
+                  table:    :etl_source,
+                  column:   :the_null_date).should == Date.parse('1970-01-01')
     end
 
     it "defaults to the specified default floor when a max date cannot be found" do
@@ -174,47 +262,47 @@ describe ETL do
       client.query %[USE etl_test]
       client.query %[
         CREATE TABLE IF NOT EXISTS etl_source (
-          id INT(11) NOT NULL AUTO_INCREMENT
-        , name VARCHAR(10)
-        , amount INT(11) DEFAULT 0
-        , PRIMARY KEY (id))]
+            id INT(11) NOT NULL AUTO_INCREMENT
+          , name VARCHAR(10)
+          , amount INT(11) DEFAULT 0
+          , PRIMARY KEY (id))]
 
       client.query %[
         INSERT INTO etl_source (name, amount)
         VALUES
-          ('Jeff', 100),
-          ('Ryan', 50),
-          ('Jack', 75),
-          ('Jeff', 10),
-          ('Jack', 45),
+          ('Jeff',  100),
+          ('Ryan',  50),
+          ('Jack',  75),
+          ('Jeff',  10),
+          ('Jack',  45),
           ('Nick', -90),
-          ('Nick', 90)]
+          ('Nick',  90)]
 
       client.close
     end
 
     it "executes the specified sql in the appropriate order" do
-      etl.ensure_destination do |e|
-        e.query %[
+      etl.ensure_destination do |etl|
+        etl.query %[
           CREATE TABLE IF NOT EXISTS etl_destination (
             name VARCHAR(10)
           , total_amount INT(11) DEFAULT 0
           , PRIMARY KEY (name))]
       end
 
-      etl.before_etl do |e|
-        e.query "DELETE FROM etl_source WHERE amount < 0"
+      etl.before_etl do |etl|
+        etl.query "DELETE FROM etl_source WHERE amount < 0"
       end
 
-      etl.etl do |e|
-        e.query %[
+      etl.etl do |etl|
+        etl.query %[
           REPLACE INTO etl_destination
           SELECT name, SUM(amount) FROM etl_source
           GROUP BY name]
       end
 
-      etl.after_etl do |e|
-        e.query %[
+      etl.after_etl do |etl|
+        etl.query %[
           UPDATE etl_destination
           SET name = CONCAT("SUPER ", name)
           WHERE total_amount > 115]
@@ -233,7 +321,7 @@ describe ETL do
     end
   end
 
-  describe '#run operations specified for exclusion' do
+  describe '#run with operations specified for exclusion' do
     let(:connection) { stub }
     let(:etl)        { described_class.new connection: connection, logger: logger }
 
@@ -253,21 +341,21 @@ describe ETL do
       after  { connection.close }
 
       it "executes the specified sql in the appropriate order and ETLs properly" do
-        etl.ensure_destination do |e|
-          e.query %[
+        etl.ensure_destination do |etl|
+          etl.query %[
             CREATE TABLE etl_destination (
-              id INT NOT NULL
-            , name VARCHAR(10)
-            , amount INT(11) DEFAULT 0
-            , PRIMARY KEY (id))]
+                id INT NOT NULL
+              , name VARCHAR(10)
+              , amount INT(11) DEFAULT 0
+              , PRIMARY KEY (id))]
         end
 
-        etl.before_etl do |e|
-          e.query "DELETE FROM etl_source WHERE amount < 0"
+        etl.before_etl do |etl|
+          etl.query "DELETE FROM etl_source WHERE amount < 0"
         end
 
-        etl.start do |e|
-          e.query(
+        etl.start do |etl|
+          etl.query(
             "SELECT COALESCE(MAX(id), 0) AS the_start FROM etl_destination"
           ).to_a.first['the_start']
         end
@@ -276,22 +364,22 @@ describe ETL do
           1
         end
 
-        etl.stop do |e|
-          e.query(
+        etl.stop do |etl|
+          etl.query(
             "SELECT MAX(id) AS the_stop FROM etl_source"
           ).to_a.first['the_stop']
         end
 
-        etl.etl do |e, lbound, ubound|
-          e.query %[
+        etl.etl do |etl, lbound, ubound|
+          etl.query %[
             REPLACE INTO etl_destination
             SELECT id, name, amount FROM etl_source s
             WHERE s.id >= #{lbound}
               AND s.id <  #{ubound}]
         end
 
-        etl.after_etl do |e|
-          e.query %[
+        etl.after_etl do |etl|
+          etl.query %[
             UPDATE etl_destination
             SET name = CONCAT("SUPER ", name)
             WHERE id <= 1]
@@ -320,17 +408,17 @@ describe ETL do
       after  { connection.close }
 
       it "executes the specified sql in the appropriate order and ETLs properly" do
-        etl.ensure_destination do |e|
-          e.query %[
+        etl.ensure_destination do |etl|
+          etl.query %[
             CREATE TABLE etl_destination (
-              id INT NOT NULL
-            , name VARCHAR(10)
-            , amount INT(11) DEFAULT 0
-            , PRIMARY KEY (id))]
+                id INT NOT NULL
+              , name VARCHAR(10)
+              , amount INT(11) DEFAULT 0
+              , PRIMARY KEY (id))]
         end
 
-        etl.before_etl do |e|
-          e.query "DELETE FROM etl_source WHERE amount < 0"
+        etl.before_etl do |etl|
+          etl.query "DELETE FROM etl_source WHERE amount < 0"
         end
 
         etl.start do
@@ -341,14 +429,14 @@ describe ETL do
           1
         end
 
-        etl.stop do |e|
-          e.query(
+        etl.stop do |etl|
+          etl.query(
             "SELECT MAX(id) AS the_stop FROM etl_source"
           ).to_a.first['the_stop']
         end
 
-        etl.etl do |e, lbound, ubound|
-          e.query %[
+        etl.etl do |etl, lbound, ubound|
+          etl.query %[
             REPLACE INTO etl_destination
             SELECT id, name, amount FROM etl_source s
             WHERE s.id >= #{lbound}
@@ -374,41 +462,41 @@ describe ETL do
         reset_test_env(connection) do |connection|
           connection.query %[
             CREATE TABLE etl_source (
-              id INT NOT NULL
-            , name VARCHAR(10)
-            , amount INT(11) DEFAULT 0
-            , PRIMARY KEY (id))]
+                id INT NOT NULL
+              , name VARCHAR(10)
+              , amount INT(11) DEFAULT 0
+              , PRIMARY KEY (id))]
 
           connection.query %[
             INSERT INTO etl_source (id, name, amount)
             VALUES
-              (1, 'Jeff', 100),
-              (2, 'Ryan', 50),
-              (13, 'Jack', 75),
-              (14, 'Jeff', 10),
-              (15, 'Jack', 45),
+              (1,  'Jeff',  100),
+              (2,  'Ryan',  50),
+              (13, 'Jack',  75),
+              (14, 'Jeff',  10),
+              (15, 'Jack',  45),
               (16, 'Nick', -90),
-              (17, 'Nick', 90)]
+              (17, 'Nick',  90)]
         end
       end
 
       after { connection.close }
 
       it "executes the specified sql in the appropriate order without getting stuck" do
-        etl.ensure_destination do |e|
-          e.query %[
+        etl.ensure_destination do |etl|
+          etl.query %[
             CREATE TABLE etl_destination (
-              id INT NOT NULL
-            , name VARCHAR(10)
-            , amount INT(11) DEFAULT 0
-            , PRIMARY KEY (id))]
+                id INT NOT NULL
+              , name VARCHAR(10)
+              , amount INT(11) DEFAULT 0
+              , PRIMARY KEY (id))]
         end
 
-        etl.before_etl do |e|
-          e.query "DELETE FROM etl_source WHERE amount < 0"
+        etl.before_etl do |etl|
+          etl.query "DELETE FROM etl_source WHERE amount < 0"
         end
 
-        etl.start do |e|
+        etl.start do |etl|
           1
         end
 
@@ -416,22 +504,22 @@ describe ETL do
           1
         end
 
-        etl.stop do |e|
-          e.query(
+        etl.stop do |etl|
+          etl.query(
             "SELECT MAX(id) AS the_stop FROM etl_source"
           ).to_a.first['the_stop']
         end
 
-        etl.etl do |e, lbound, ubound|
-          e.query %[
+        etl.etl do |etl, lbound, ubound|
+          etl.query %[
             REPLACE INTO etl_destination
-              SELECT
-                  id
-                , name
-                , amount
-              FROM etl_source s
-              WHERE s.id >= #{lbound}
-                AND s.id <  #{ubound}]
+            SELECT
+                id
+              , name
+              , amount
+            FROM etl_source s
+            WHERE s.id >= #{lbound}
+              AND s.id <  #{ubound}]
         end
 
         etl.run
@@ -457,9 +545,9 @@ describe ETL do
         reset_test_env(connection) do |connection|
           connection.query %[
             CREATE TABLE etl_source (
-              the_date DATE NOT NULL
-            , name VARCHAR(10)
-            , amount INT(11) DEFAULT 0)]
+                the_date DATE NOT NULL
+              , name VARCHAR(10)
+              , amount INT(11) DEFAULT 0)]
 
           connection.query %[
             INSERT INTO etl_source (the_date, name, amount)
@@ -477,21 +565,21 @@ describe ETL do
       after { connection.close }
 
       it "executes the specified sql in the appropriate order and ETLs properly" do
-        etl.ensure_destination do |e|
-          e.query %[
+        etl.ensure_destination do |etl|
+          etl.query %[
             CREATE TABLE etl_destination (
-              the_date DATE NOT NULL
-            , name VARCHAR(10)
-            , total_amount INT(11) DEFAULT 0
-            , PRIMARY KEY (the_date, name))]
+                the_date DATE NOT NULL
+              , name VARCHAR(10)
+              , total_amount INT(11) DEFAULT 0
+              , PRIMARY KEY (the_date, name))]
         end
 
-        etl.before_etl do |e|
-          e.query "DELETE FROM etl_source WHERE amount < 0"
+        etl.before_etl do |etl|
+          etl.query "DELETE FROM etl_source WHERE amount < 0"
         end
 
-        etl.start do |e|
-          e.query(%[
+        etl.start do |etl|
+          etl.query(%[
             SELECT COALESCE(MAX(the_date), DATE('2012-01-01')) AS the_start
             FROM etl_destination
           ]).to_a.first['the_start']
@@ -501,14 +589,14 @@ describe ETL do
           1.day
         end
 
-        etl.stop do |e|
-          e.query(
+        etl.stop do |etl|
+          etl.query(
             "SELECT MAX(the_date) AS the_stop FROM etl_source"
           ).to_a.first['the_stop']
         end
 
-        etl.etl do |e, lbound, ubound|
-          e.query %[
+        etl.etl do |etl, lbound, ubound|
+          etl.query %[
             REPLACE INTO etl_destination
             SELECT
                 the_date
@@ -553,9 +641,9 @@ describe ETL do
         reset_test_env(connection) do |connection|
           connection.query %[
             CREATE TABLE etl_source (
-              the_datetime DATETIME NOT NULL
-            , name VARCHAR(10)
-            , amount INT(11) DEFAULT 0)]
+                the_datetime DATETIME NOT NULL
+              , name VARCHAR(10)
+              , amount INT(11) DEFAULT 0)]
 
           connection.query %[
             INSERT INTO etl_source (the_datetime, name, amount)
@@ -573,21 +661,21 @@ describe ETL do
       after { connection.close }
 
       it "executes the specified sql in the appropriate order and ETLs properly" do
-        etl.ensure_destination do |e|
-          e.query %[
+        etl.ensure_destination do |etl|
+          etl.query %[
             CREATE TABLE etl_destination (
-              the_datetime DATETIME NOT NULL
-            , name VARCHAR(10)
-            , amount INT(11) DEFAULT 0
-            , PRIMARY KEY (the_datetime, name))]
+                the_datetime DATETIME NOT NULL
+              , name VARCHAR(10)
+              , amount INT(11) DEFAULT 0
+              , PRIMARY KEY (the_datetime, name))]
         end
 
-        etl.before_etl do |e|
-          e.query "DELETE FROM etl_source WHERE amount < 0"
+        etl.before_etl do |etl|
+          etl.query "DELETE FROM etl_source WHERE amount < 0"
         end
 
-        etl.start do |e|
-          e.query(%[
+        etl.start do |etl|
+          etl.query(%[
             SELECT CAST(COALESCE(MAX(the_datetime), '2012-01-01 00:00:00') AS DATETIME) AS the_start
             FROM etl_destination
           ]).to_a.first['the_start']
@@ -597,14 +685,14 @@ describe ETL do
           1.minute
         end
 
-        etl.stop do |e|
-          e.query(
+        etl.stop do |etl|
+          etl.query(
             "SELECT MAX(the_datetime) AS the_stop FROM etl_source"
           ).to_a.first['the_stop']
         end
 
-        etl.etl do |e, lbound, ubound|
-          e.query %[
+        etl.etl do |etl, lbound, ubound|
+          etl.query %[
             REPLACE INTO etl_destination
             SELECT
                 the_datetime

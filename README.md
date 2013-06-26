@@ -29,7 +29,9 @@ on what is logged and when, view the [logger details](#logger-details).
 
 ### Basic ETL
 
-To run basic ETL that is composed of sequential SQL statements, start by
+Assume that we have a database connection represented by `connection`.
+
+To run a basic ETL that is composed of sequential SQL statements, start by
 creating a new ETL instance:
 
 ```ruby
@@ -54,19 +56,16 @@ etl.config do |etl|
     # For most ETLs you may want to ensure that the destination exists, so the
     # #ensure_destination block is ideally suited to fulfill this requirement.
     #
-    # etl.query %[YOUR BEFORE ETL SQL / CODE GOES HERE]
-    #
     # By way of example:
     #
     etl.query %[
       CREATE TABLE IF NOT EXISTS some_database.some_destination_table (
-        user_id INT UNSIGNED NOT NULL,
-        created_date DATE NOT NULL,
-        total_amount INT SIGNED NOT NULL,
-        message VARCHAR(100) DEFAULT NULL,
-        PRIMARY KEY (user_id),
-        KEY (user_id, created_date),
-        KEY (created_date)
+          user_id INT UNSIGNED NOT NULL
+        , created_date DATE NOT NULL
+        , total_amount INT SIGNED NOT NULL
+        , message VARCHAR(100) DEFAULT NULL
+        , PRIMARY KEY (user_id, created_date)
+        , KEY (created_date)
       )]
   end
 
@@ -78,10 +77,6 @@ etl.config do |etl|
     # block vs the #etl block is not very clear. We will see how and when to
     # leverage this block effectively when we introduce iteration.
     #
-    # Again, the following convention is used:
-    #
-    # etl.query %[YOUR BEFORE ETL SQL / CODE GOES HERE]
-    #
     # As an example, let's say we want to get rid of all entries that have an
     # amount less than zero before moving on to our actual etl:
     #
@@ -89,16 +84,17 @@ etl.config do |etl|
   end
 
   etl.etl do |etl|
-    # Here is where the magic happens! This block contains the main ETL SQL.
-    # The following convention is used:
-    #
-    # etl.query %[YOU ETL SQL / CODE GOES HERE]
+    # Here is where the magic happens! This block contains the main ETL
+    # operation.
     #
     # For example:
     #
     etl.query %[
-      REPLACE INTO some_database.some_destination_table
-      SELECT
+      REPLACE INTO some_database.some_destination_table (
+          user_id
+        , created_date
+        , total_amount
+      ) SELECT
           user_id
         , DATE(created_at) AS created_date
         , SUM(amount) AS total_amount
@@ -106,7 +102,7 @@ etl.config do |etl|
         some_database.some_source_table sst
       GROUP BY
           sst.user_id
-        , sst.DATE(created_at)]
+        , DATE(sst.created_at)]
   end
 
   etl.after_etl do |etl|
@@ -154,21 +150,16 @@ etl.config do |etl|
     # For most ETLs you may want to ensure that the destination exists, so the
     # #ensure_destination block is ideally suited to fulfill this requirement.
     #
-    # etl.query %[
-    #   YOUR BEFORE ETL SQL / CODE GOES HERE
-    # ]
-    #
     # By way of example:
     #
     etl.query %[
       CREATE TABLE IF NOT EXISTS some_database.some_destination_table (
-        user_id INT UNSIGNED NOT NULL,
-        created_date DATE NOT NULL,
-        total_amount INT SIGNED NOT NULL,
-        message VARCHAR(100) DEFAULT NULL,
-        PRIMARY KEY (user_id),
-        KEY (user_id, created_date),
-        KEY (created_date)
+          user_id INT UNSIGNED NOT NULL
+        , created_date DATE NOT NULL
+        , total_amount INT SIGNED NOT NULL
+        , message VARCHAR(100) DEFAULT NULL
+        , PRIMARY KEY (user_id, created_date)
+        , KEY (created_date)
       )]
   end
 
@@ -178,10 +169,6 @@ etl.config do |etl|
     # Now that we are leveraging iteration the #before_etl block becomes
     # more useful as a way to execute an operation once before we begin
     # our iteration.
-    #
-    # Again, the following convention is used:
-    #
-    # etl.query %[YOUR BEFORE ETL SQL / CODE GOES HERE]
     #
     # As an example, let's say we want to get rid of all entries that have an
     # amount less than zero before moving on to our actual etl:
@@ -201,8 +188,11 @@ etl.config do |etl|
     #
     # As an example:
     #
+    # Note that we cast the default date as a DATE. If we don't, it will be
+    # treated as a string and our iterator will fail under the hood when testing
+    # if it is complete.
     res = etl.query %[
-      SELECT COALESCE(MAX(created_date), '1970-01-01') AS the_max
+      SELECT COALESCE(MAX(created_date), DATE('2010-01-01')) AS the_max
       FROM some_database.some_destination_table]
 
     res.to_a.first['the_max']
@@ -215,12 +205,11 @@ etl.config do |etl|
     # As an alternative example, to set the iteration to go 10,000 units
     # at a time, the following value should be provided:
     #
-    #   10_000 (Note: An underscore is used in place of a comma.)
+    #   10_000 (Note: an underscore is used for readability)
     #
-    # And, when working with dates, the step block should be set to a number
-    # of days. To iterate over 7 days at a time, then use:
+    # As an example, to iterate 7 days at a time:
     #
-    7.days
+    7
   end
 
   etl.stop do |etl|
@@ -247,7 +236,7 @@ etl.config do |etl|
 
   etl.etl do |etl, lbound, ubound|
     # The etl block is the main part of the framework. Note: there are
-    # two extra args with the iterator - "lbound" and "ubound"
+    # two extra args with the iterator this time around: "lbound" and "ubound"
     #
     # "lbound" is the lower bound of the current iteration. When iterating
     # from 0 to 10 and stepping by 2, the lbound would equal 2 on the
@@ -257,29 +246,38 @@ etl.config do |etl|
     # example above, when iterating from 0 to 10 and stepping by 2, the ubound would
     # equal 4 on the second iteration.
     #
-    # These args can be used to "window" SQL queries.
+    # These args can be used to "window" SQL queries or other code operations.
     #
     # As a first example, to iterate over a set of ids:
     #
     #   etl.query %[
-    #     REPLACE INTO some_database.some_destination_table
-    #     SELECT
-    #         user_id
-    #       , SUM(amount) AS total_amount
+    #     REPLACE INTO some_database.some_destination_table (
+    #         created_date
+    #       , user_id
+    #       , total_amount
+    #     ) SELECT
+    #         DATE(sst.created_at) AS created_date
+    #       , sst.user_id
+    #       , SUM(sst.amount) AS total_amount
     #     FROM
     #       some_database.some_source_table sst
     #     WHERE
     #       sst.user_id > #{lbound} AND sst.user_id <= #{ubound}
     #     GROUP BY
-    #       sst.user_id]
+    #         DATE(sst.created_at)
+    #       , sst.user_id]
     #
     # To "window" a SQL query using dates:
     #
     etl.query %[
-      REPLACE INTO some_database.some_destination_table
-      SELECT
-          DATE(created_at)
-        , SUM(amount) AS total_amount
+      REPLACE INTO some_database.some_destination_table (
+          created_date
+        , user_id
+        , total_amount
+      ) SELECT
+          DATE(sst.created_at) AS created_date
+        , sst.user_id
+        , SUM(sst.amount) AS total_amount
       FROM
         some_database.some_source_table sst
       WHERE
@@ -287,7 +285,8 @@ etl.config do |etl|
         -- This is is required when dealing with dates / datetimes
         sst.created_at >= '#{lbound}' AND sst.created_at < '#{ubound}'
       GROUP BY
-        sst.user_id]
+          DATE(sst.created_at)
+        , sst.user_id]
 
     # Note that there is no sql sanitization here so there is *potential* for SQL
     # injection. That being said you'll likely be using this gem in an internal
@@ -319,6 +318,13 @@ that order.
 Note that `#etl` executes `#start` and `#stop` once and memoizes the result for
 each. It then begins to iterate from what `#start` evaluated to up until what `#stop`
 evaluated to by what `#step` evaluates to.
+
+## Examples
+
+There are two examples found in `./examples` that demonstrate the basic ETL and
+iteration ETL. Each file uses the [mysql2](https://github.com/brianmario/mysql2)
+gem and reads / writes data to localhost using the root user with no password.
+Adjust as needed.
 
 ## Logger Details
 
@@ -381,11 +387,17 @@ end
 
 ## Contributing
 
-1. Fork it
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Added some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
+If you would like to contribute code to ETL you can do so through GitHub by
+forking the repository and sending a pull request.
+
+When submitting code, please make every effort to follow existing conventions
+and style in order to keep the code as readable as possible.
+
+Before your code can be accepted into the project you must also sign the
+[Individual Contributor License Agreement (CLA)][1].
+
+
+ [1]: https://spreadsheets.google.com/spreadsheet/viewform?formkey=dDViT2xzUHAwRkI3X3k5Z0lQM091OGc6MQ&ndplr=1
 
 ## License
 
