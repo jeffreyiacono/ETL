@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    ETL (1.2.0)
+    etl (1.2.0)
       activesupport (>= 3.2.3)
 
 GEM
@@ -31,8 +31,8 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  ETL!
   cane
+  etl!
   mysql2
   rake
   rspec (>= 2)
