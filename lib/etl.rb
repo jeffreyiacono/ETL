@@ -33,7 +33,9 @@ class ETL
   end
 
   def self.defaults
-    {connection: @connection}
+    {
+      connection: @connection
+    }
   end
 
   def initialize attributes = {}
